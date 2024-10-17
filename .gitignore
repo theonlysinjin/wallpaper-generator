@@ -1,2 +1,7 @@
 .DS_Store
+__pycache__
 images/
+venv/
+config.ini
+generate-city.plist
+generate-rotate.plist

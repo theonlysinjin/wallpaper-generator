@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.sswanepoel.generate-city</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>{{PYTHON_PATH}}</string>
+        <string>{{SCRIPT_PATH}}</string>
+        <string>generate</string>
+        <string>--city</string>
+        <string>{{CITY_NAME}}</string>
+        <string>--rotate-now</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>{{INTERVAL}}</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>ExitTimeOut</key>
+    <integer>60</integer>
+    <key>StandardOutPath</key>
+    <string>/tmp/wallpaperchanger-{{CITY_NAME}}.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/wallpaperchanger-{{CITY_NAME}}.err</string>
+    <key>UserName</key>
+    <string>sswanepoel</string>
+    <key>LimitLoadToSessionType</key>
+    <string>Aqua</string>
+    <key>SessionCreate</key>
+    <true/>
+</dict>
+</plist>

@@ -30,9 +30,6 @@ jobs:
           name: release_url
           path: release_url.txt
 
-# -i resources/clipster.ico 
-# -i resources/clipster.icns
-
   build:
     name: Build packages
     needs: createrelease
@@ -42,23 +39,20 @@ jobs:
         include:
           - os: macos-latest
             TARGET: macos
-            CMD_BUILD: >
-                pyinstaller -F -w -n wallpaper-generator generate-wallpaper.py &&
-                cd dist/ &&
-                zip -r9 wallpaper-generator wallpaper-generator.app/                
-            OUT_FILE_NAME: wallpaper-generator.zip
+            ASSET_PATH: generate-wallpaper.app
+            ASSET_NAME: generate-wallpaper.app
             ASSET_MIME: application/zip
 
           - os: windows-latest
             TARGET: windows
-            CMD_BUILD: pyinstaller -F -w -n wallpaper-generator generate-wallpaper.py
-            OUT_FILE_NAME: wallpaper-generator.exe
+            ASSET_PATH: generate-wallpaper.exe
+            ASSET_NAME: generate-wallpaper.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
 
           - os: ubuntu-latest
-            TARGET: ubuntu
-            CMD_BUILD: pyinstaller -F -w -n wallpaper-generator generate-wallpaper.py
-            OUT_FILE_NAME: wallpaper-generator
+            TARGET: linux
+            ASSET_PATH: generate-wallpaper.bin
+            ASSET_NAME: generate-wallpaper.bin
             ASSET_MIME: application/octet-stream
 
     steps:
@@ -75,8 +69,21 @@ jobs:
           pip3 install -r requirements.txt
           pip3 install pyinstaller
 
-      - name: Build with pyinstaller for ${{matrix.TARGET}}
-        run: ${{matrix.CMD_BUILD}}
+      # - name: Build with pyinstaller for ${{matrix.TARGET}}
+      #   run: ${{matrix.CMD_BUILD}}
+
+      - uses: Nuitka/Nuitka-Action@main
+        with:
+          nuitka-version: main
+          script-name: generate-wallpaper.py
+          onefile: true
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.ASSET_NAME}}
+          path: build/${{ matrix.ASSET_NAME }}
+          include-hidden-files: true
 
       - name: Load Release URL File from release job
         uses: actions/download-artifact@v4
@@ -87,7 +94,7 @@ jobs:
         id: get_release_info
         shell: bash
         run: |
-          value=`cat release_url/release_url.txt`
+          value=`cat release_url.txt`
           echo ::set-output name=upload_url::$value        
   
       - name: Upload Release Asset
@@ -97,6 +104,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.get_release_info.outputs.upload_url }}
-          asset_path: ./dist/${{ matrix.OUT_FILE_NAME}}
-          asset_name: ${{ matrix.OUT_FILE_NAME}}
-          asset_content_type: ${{ matrix.ASSET_MIME}}
+          asset_path: ./build/${{ matrix.ASSET_PATH }}
+          asset_name: ${{ matrix.ASSET_NAME }}
+          asset_content_type: ${{ matrix.ASSET_MIME }}

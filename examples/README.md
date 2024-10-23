@@ -5,17 +5,17 @@ Below are some sample images:
 
 ## Sample Images
 
-![Serene Sunset](./image_An_abstract_digital_realm_where_geometric_shapes_in_electric_neon_colors_dance_on_a_deep_black_background_This_space_feels_infinite_with_pulsating_lines_and_interlocking_patterns_creating_a_sense_of_depth_and_movement__20241014084347.png)
+![Serene Sunset](./image_An_abstract_digital_realm.png)
 *An abstract digital realm where geometric shapes in electric neon colors dance on a deep black background. This space feels infinite, with pulsating lines and interlocking patterns creating a sense of depth and movement. Perfect for technology or innovation-themed settings, it exudes an aura of futuristic elegance.*
 
-![Bustling Cityscape](./image_An_enchanted_forest_in_autumn_with_golden_leaves_falling_magical_creatures_peeking_from_behind_trees_and_a_shimmering_winding_river_20240813084632.png)
+![Bustling Cityscape](./image_An_enchanted_forest_in_autumn.png)
 *An enchanted forest in autumn with golden leaves falling magical creatures peeking from behind trees and a shimmering winding river*
 
-![Abstract Swirl](./image_Modern_abstract_art_with_soft_pastel_colors_20240517091908.png)
+![Abstract Swirl](./image_Modern_abstract_art_with_soft_pastel_colors.png)
 *Modern abstract art with soft pastel colors*
 
-![Peaceful Forest Path](./image_Serene_lake_hidden_within_a_misty_untouched_mountain_range_reflecting_surreal_celestial_events_in_its_waters_20240813083119.png)
+![Peaceful Forest Path](./image_Serene_lake_hidden_within_a_misty_untouched_mountain_range.png)
 *Serene lake hidden within a misty untouched mountain range reflecting surreal celestial events in its waters*
 
-![Supernove Remnant](./image_A_supernova_remnant_expanding_in_space_its_intricate_shockwaves_brightly_colored_containing_the_seeds_of_future_solar_systems_20240419124740.png)
+![Supernove Remnant](./image_A_supernova_remnant.png)
 *A supernova remnant expanding in space its intricate shockwaves brightly colored containing the seeds of future solar systems.*

@@ -1,0 +1,32 @@
+name: Generate Weather Wallpaper
+
+on:
+  # push:
+  schedule:
+    - cron: '0 */2 * * *'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    outputs:
+      city: ${{ steps.generate.outputs.city }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install requirements
+        run: apt-get update && update
+
+      - name: Generate wallpaper
+        id: generate
+        run: python generate-wallpaper.py generate --city "Cape Town"
+
+      - name: Generate wallpaper
+        run: ls -lah images/
+
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_NAME: ${{ steps.generate.outputs.city }}
+          RELEASE_BODY: "Automatically generated wallpaper for ${{ steps.generate.outputs.city }}"

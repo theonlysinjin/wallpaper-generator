@@ -79,7 +79,7 @@ jobs:
           onefile: true
           output-file: ${{ matrix.ASSET_NAME }}
           macos-create-app-bundle: ${{ matrix.TARGET == 'macos' }}
-          windows-icon-from-ico: ${{ matrix.TARGET == 'windows' && 'path/to/icon.ico' || '' }}
+          windows-icon-from-ico: ${{ matrix.TARGET == 'windows' && 'resources/icon.ico' || '' }}
 
       - name: List build directory
         run: |

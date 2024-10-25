@@ -1,0 +1,120 @@
+name: Build Wallpaper Generator
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  createrelease:
+    name: Create Release
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Output Release URL File
+        run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
+
+      - name: Save Release URL File for publish
+        uses: actions/upload-artifact@v4
+        with:
+          name: release_url
+          path: release_url.txt
+
+  build:
+    name: Build packages
+    needs: createrelease
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            TARGET: macos
+            ASSET_PATH: generate-wallpaper.bin
+            ASSET_NAME: generate-wallpaper.app
+            ASSET_MIME: application/zip
+
+          - os: windows-latest
+            TARGET: windows
+            ASSET_PATH: generate-wallpaper.exe
+            ASSET_NAME: generate-wallpaper.exe
+            ASSET_MIME: application/vnd.microsoft.portable-executable
+
+          - os: ubuntu-latest
+            TARGET: linux
+            ASSET_PATH: generate-wallpaper.bin
+            ASSET_NAME: generate-wallpaper.bin
+            ASSET_MIME: application/octet-stream
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip3 install -r requirements.txt
+          pip3 install pyinstaller
+
+      # - name: Build with pyinstaller for ${{matrix.TARGET}}
+      #   run: ${{matrix.CMD_BUILD}}
+      - uses: Nuitka/Nuitka-Action@main
+        with:
+          nuitka-version: main
+          script-name: generate-wallpaper.py
+          onefile: true
+          output-file: ${{ matrix.ASSET_NAME }}
+          macos-create-app-bundle: ${{ matrix.TARGET == 'macos' }}
+          windows-icon-from-ico: ${{ matrix.TARGET == 'windows' && 'resources/icon.ico' || '' }}
+
+      - name: List build directory
+        run: |
+          if [ "${{ matrix.TARGET }}" == "windows" ]; then
+            dir build
+          else
+            ls -lah build
+          fi
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.ASSET_NAME}}
+          path: build/${{ matrix.ASSET_NAME }}
+          include-hidden-files: true
+
+      - name: Load Release URL File from release job
+        uses: actions/download-artifact@v4
+        with:
+          name: release_url
+  
+      - name: Get Release File Name & Upload URL
+        id: get_release_info
+        shell: bash
+        run: |
+          value=`cat release_url.txt`
+          echo ::set-output name=upload_url::$value        
+  
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+          asset_path: ./build/${{ matrix.ASSET_PATH }}
+          asset_name: ${{ matrix.ASSET_NAME }}
+          asset_content_type: ${{ matrix.ASSET_MIME }}

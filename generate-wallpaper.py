@@ -89,7 +89,7 @@ def handle_city_based_generation(client, city, directory_path, generated_images)
     if current_data:
         print("Weather data successfully fetched.")
         print("Generating prompt using GPT-4...")
-        prompt = weather_data.generate_gpt4_prompt(client, current_data)
+        prompt = weather_data.generate_gpt4_prompt(client, current_data, "current")
         print("Generated Prompt:")
         print(prompt)
         image_path = generate_image(client, f"{prompt} Do not include any text in the image. Avoid using known landmarks or places.", directory_path)
@@ -247,14 +247,16 @@ def main():
         rotate_wallpaper(directory_path)
 
 if __name__ == '__main__':
-    import configparser
     import os
 
-    config = configparser.ConfigParser()
-    config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
-    config.read(config_path)
-
-    openai_api_key = config['OpenAI']['api_key']
-    os.environ['OPENAI_API_KEY'] = openai_api_key
+    if 'OPENAI_API_KEY' in os.environ:
+        openai_api_key = os.environ['OPENAI_API_KEY']
+    else:
+        import configparser
+        config = configparser.ConfigParser()
+        config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
+        config.read(config_path)
+        openai_api_key = config['OpenAI']['api_key']
+        os.environ['OPENAI_API_KEY'] = openai_api_key
 
     main()

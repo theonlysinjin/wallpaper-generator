@@ -65,6 +65,8 @@ jobs:
 
       - name: Generate wallpaper
         run: python3 generate-wallpaper.py generate --city "Cape Town"
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Generate wallpaper
         run: ls -lah images/

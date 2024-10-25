@@ -4,7 +4,7 @@ Welcome to the Wallpaper Generator project! This innovative tool harnesses the p
 
 |      Bamboo Forest      |      Mountain Landscape      |
 | :----------------------: | :-----------------------: |
-| ![Bamboo Forest](./examples/image_Lush_green_bamboo_forest_with_sunlight_filtering_through_20240517091955.png) | ![Mountain Landscape](./examples/image_serene_mountain_landscape_at_dawn_where_the_sky_is_a_vibrant_spectrum_of_pinks_purples_and_oranges_reflected_in_a_tranquil_mirrorlike_lake_The_scene_is_dotted_with_lush_green_pines_and_a_single_canoe_is_gently_glidin_20241014084325.png) |
+| ![Bamboo Forest](./examples/image_Lush_green_bamboo_forest_with_sunlight_filtering_through.png) | ![Mountain Landscape](./examples/image_serene_mountain_landscape_at_dawn.png) |
 
 ## Features
 

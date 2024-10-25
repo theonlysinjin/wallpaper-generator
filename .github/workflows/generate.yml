@@ -1,0 +1,105 @@
+name: Generate Weather Wallpaper
+on:
+  push:
+    tags:
+      - 'generate/*'
+
+jobs:
+  createrelease:
+    name: Create Release
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Set timestamp
+        id: timestamp
+        run: |
+          if [[ ${{ github.ref }} =~ ^refs/tags/generate/(.+)$ ]]; then
+            echo "timestamp=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
+          else
+            echo "timestamp=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Weather based Wallpaper ${{ steps.timestamp.outputs.timestamp }}
+          draft: false
+          prerelease: false
+
+      - name: Output Release URL File
+        run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
+
+      - name: Save Release URL File for publish
+        uses: actions/upload-artifact@v4
+        with:
+          name: release_url
+          path: release_url.txt
+
+  generate:
+    needs: createrelease
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - city: Cape Town
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip3 install -r requirements.txt
+
+      - name: Generate wallpaper
+        run: python3 generate-wallpaper.py generate --city "Cape Town"
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Generate wallpaper
+        run: ls -lah images/
+
+      - name: Find first image
+        id: find_image
+        run: |
+          image=$(find images -type f \( -name "*.jpg" -o -name "*.png" \) | head -n 1)
+          echo "image_path=$image" >> $GITHUB_OUTPUT
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.city }}
+          path: ${{ steps.find_image.outputs.image_path }}
+
+      - name: Load Release URL File from release job
+        uses: actions/download-artifact@v4
+        with:
+          name: release_url
+
+      - name: Get Release File Name & Upload URL
+        id: get_release_info
+        shell: bash
+        run: |
+          value=`cat release_url.txt`
+          echo ::set-output name=upload_url::$value        
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+          asset_path: ${{ steps.find_image.outputs.image_path }}
+          asset_name: ${{ matrix.city }}.png
+          asset_content_type: image/png

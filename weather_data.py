@@ -95,20 +95,15 @@ def get_weather_description(weathercode):
     }
     return weather_codes.get(weathercode, "Unknown")
 
-def generate_gpt4_prompt(client, weather_data, use_forecast=None):
+def generate_gpt4_prompt(client, weather_data, weather_type=None):
     """Generate a prompt using GPT-4 based on the weather data."""
 
-    # Read the weather option from config.ini
-    config = configparser.ConfigParser()
-    config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
-    config.read(config_path)
-    weather_option = config['Weather']['weather']
+    # Determine the forecast text based on the weather_type
+    if weather_type == 'forecast':
+        forecast_text = "forecasted"
+    else:
+        forecast_text = "current"
 
-    # Use passed in forecast information if provided, otherwise use config
-    if use_forecast is None:
-        use_forecast = weather_option.lower() == 'forecast'
-
-    forecast_text = "forecasted" if use_forecast else "current"
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
@@ -168,10 +163,16 @@ def main():
             config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
             config.read(config_path)
             openai_api_key = config['OpenAI']['api_key']
-            
             client = OpenAI(api_key=openai_api_key)
+
+            # Read the weather option from config.ini
+            config = configparser.ConfigParser()
+            config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
+            config.read(config_path)
+            weather_option = config['Weather']['weather']
+
             print("Generating prompt using GPT-4...")
-            prompt = generate_gpt4_prompt(client, weather_data, use_forecast)
+            prompt = generate_gpt4_prompt(client, weather_data, weather_option)
             print("Generated Prompt:")
             print(prompt)
     else:

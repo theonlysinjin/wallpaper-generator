@@ -16,8 +16,8 @@ jobs:
         run: |
           echo "timestamp=$(date '+%y-%m-%d-%H')" >> $GITHUB_OUTPUT
 
-      - name: Create tag
-        uses: actions/create-tag@v1
+      - name: Bump version and push tag
+        uses: laputansoft/github-tag-action@v4.6
         with:
-          tag_name: 'generate/${{ steps.timestamp.outputs.timestamp }}'
-          commit_message: 'Automated tag creation'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: 'generate/${{ steps.timestamp.outputs.timestamp }}'

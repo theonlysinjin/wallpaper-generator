@@ -1,0 +1,22 @@
+name: Tag to Generate
+on:
+  schedule:
+    - cron: '0 */2 * * *'
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Generate datestamp
+        id: timestamp
+        run: |
+          echo "timestamp=$(date '+%y-%m-%d-%H')" >> $GITHUB_OUTPUT
+
+      - name: Create tag
+        uses: actions/create-tag@v1
+        with:
+          tag_name: 'generate/${{ steps.timestamp.outputs.timestamp }}'
+          commit_message: 'Automated tag creation'

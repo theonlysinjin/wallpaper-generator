@@ -247,14 +247,16 @@ def main():
         rotate_wallpaper(directory_path)
 
 if __name__ == '__main__':
-    import configparser
     import os
 
-    config = configparser.ConfigParser()
-    config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
-    config.read(config_path)
-
-    openai_api_key = config['OpenAI']['api_key']
-    os.environ['OPENAI_API_KEY'] = openai_api_key
+    if 'OPENAI_API_KEY' in os.environ:
+        openai_api_key = os.environ['OPENAI_API_KEY']
+    else:
+        import configparser
+        config = configparser.ConfigParser()
+        config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
+        config.read(config_path)
+        openai_api_key = config['OpenAI']['api_key']
+        os.environ['OPENAI_API_KEY'] = openai_api_key
 
     main()

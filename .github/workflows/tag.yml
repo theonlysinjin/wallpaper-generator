@@ -25,5 +25,5 @@ jobs:
 
           git config user.name "GitHub Actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git tag 'generate/${{ steps.timestamp.outputs.timestamp }}'
+          git tag -m "Automated Run" 'generate/${{ steps.timestamp.outputs.timestamp }}'
           GIT_SSH_COMMAND="ssh -i ssh_key" git push origin 'generate/${{ steps.timestamp.outputs.timestamp }}'

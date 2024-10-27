@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          ssh-key: "${{ secrets.SSH_KEY }}"
 
       - name: Generate datestamp
         id: timestamp
@@ -18,7 +20,10 @@ jobs:
 
       - name: Push Git Tag
         run: |
+          echo "${{ secrets.SSH_KEY }}" > ssh_key
+          chmod 600 ssh_key
+
           git config user.name "GitHub Actions"
           git config user.email "github-actions@users.noreply.github.com"
           git tag 'generate/${{ steps.timestamp.outputs.timestamp }}'
-          git push origin 'generate/${{ steps.timestamp.outputs.timestamp }}'
+          GIT_SSH_COMMAND="ssh -i ssh_key" git push origin 'generate/${{ steps.timestamp.outputs.timestamp }}'

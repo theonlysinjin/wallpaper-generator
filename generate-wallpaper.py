@@ -1,5 +1,5 @@
 #!env python3
-import os, re, requests, sys, glob, random, subprocess, io, argparse, json
+import os, re, requests, sys, glob, random, subprocess, io, argparse, json, getpass
 from PIL import Image, PngImagePlugin
 from datetime import datetime
 from openai import OpenAI
@@ -109,8 +109,54 @@ def generate_images_from_prompts(client, prompts, directory_path, generated_imag
             image_path = generate_image(client, prompt, directory_path)
             generated_images.append(image_path)
 
+def fetch_latest_city_wallpaper(city, directory_path):
+    # GitHub API endpoint for latest release
+    owner = "theonlysinjin"
+    repo = "wallpaper-generator"
+    api_url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
+    
+    try:
+        # Get latest release info
+        response = requests.get(api_url)
+        response.raise_for_status()
+        release_data = response.json()
+        
+        # Get the release tag name and normalise
+        tag_name = release_data.get('tag_name', 'unknown').replace("generate/", "")
+        city_name = city.replace(" ", ".")
+        
+        # Check for existing file with this tag
+        existing_files = glob.glob(os.path.join(directory_path, f"*{city_name}*{tag_name}.png"))
+        if existing_files:
+            print(f"Found existing wallpaper for {city} with tag {tag_name}")
+            return existing_files[0]
+        
+        for asset in release_data['assets']:
+            if city_name in asset['name'] and asset['name'].endswith('.png'):
+                # Download the asset
+                download_url = asset['browser_download_url']
+                image_response = requests.get(download_url)
+                image_response.raise_for_status()
+                
+                # Modify filename to include tag name
+                base_name = os.path.splitext(asset['name'])[0]
+                new_filename = f"{base_name}_{tag_name}.png"
+                
+                # Save to local directory
+                local_path = os.path.join(directory_path, new_filename)
+                with open(local_path, 'wb') as f:
+                    f.write(image_response.content)
+                return local_path
+
+        print(f"No wallpaper found for {city} in the latest release")
+        return None
+    except Exception as e:
+        print(f"Error fetching wallpaper: {str(e)}")
+        return None
+
 def handle_service_management(args):
-    plist_files = ['generate-rotate.plist', 'generate-city.plist']
+    # Update list of possible plist files
+    plist_files = ['generate-rotate.plist', 'generate-city.plist', 'fetch-city.plist']
 
     if args.command in ["uninstall", "reinstall"]:
         uninstall_services(plist_files)
@@ -128,7 +174,7 @@ def uninstall_services(plist_files):
             print(f"The {job_name} job is not installed.")
 
 def is_service_installed(job_name):
-    check_cmd = f"launchctl list | grep {job_name}"
+    check_cmd = f"launchctl list | grep 'com.wallpaper-generator.{job_name}'"
     check_result = subprocess.run(check_cmd, shell=True, capture_output=True, text=True)
     return check_result.returncode == 0
 
@@ -140,9 +186,15 @@ def uninstall_service(plist_path, plist_file):
     else:
         print(f"Failed to uninstall {plist_file}. Error: {result.stderr.strip()}")
         print(f"Try running `sudo launchctl unload -w {plist_path}` for richer errors.")
-
 def install_service(args):
-    plist_file = 'generate-city.plist' if args.city else 'generate-rotate.plist'
+    # Determine which plist file to use based on arguments
+    if args.city:
+        if getattr(args, 'generate', False):
+            plist_file = 'generate-city.plist'
+        else:
+            plist_file = 'fetch-city.plist'
+    else:
+        plist_file = 'generate-rotate.plist'
     template_path = os.path.join(os.path.dirname(__file__), f"{plist_file}.template")
     plist_path = os.path.join(os.path.dirname(__file__), plist_file)
 
@@ -157,6 +209,7 @@ def install_service(args):
     plist_content = plist_content.replace('{{SCRIPT_PATH}}', script_path)
     if args.city:
         plist_content = plist_content.replace('{{CITY_NAME}}', args.city)
+    plist_content = plist_content.replace('{{USERNAME}}', getpass.getuser())
 
     with open(plist_path, 'w') as file:
         file.write(plist_content)
@@ -168,6 +221,10 @@ def install_service(args):
         print(f"{plist_file} {'re' if args.command == 'reinstall' else ''}installed with interval {args.interval} seconds and job loaded successfully.")
         if args.city:
             print(f"City set to {args.city}")
+            if getattr(args, 'generate', False):
+                print("Using generate mode for city-based wallpapers")
+            else:
+                print("Using fetch mode for city-based wallpapers")
     else:
         print(f"Failed to load {plist_file}. Error: {result.stderr.strip()}")
         print(f"Try running `sudo launchctl load -w {plist_path}` for richer errors.")
@@ -189,17 +246,37 @@ def main():
     generate_parser.add_argument("--city", type=str, help="City name for weather-based prompt generation")
     generate_parser.add_argument("--rotate-now", action="store_true", help="Rotate wallpaper immediately after generation")
 
-    # Install command
+    # Fetch command
+    fetch_parser = subparsers.add_parser("fetch", help="Fetch the most recent wallpaper for a city")
+    fetch_parser.add_argument("--city", type=str, required=True, help="City name to fetch wallpaper for")
+    fetch_parser.add_argument("--rotate-now", action="store_true", help="Rotate to the fetched wallpaper immediately")
+
+    # Custom action to handle dynamic default intervals
+    class IntervalAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            setattr(namespace, self.dest, values)
+
+    # Update install parser
     install_parser = subparsers.add_parser("install", help="Install the plist file for automatic wallpaper rotation")
-    install_parser.add_argument("--interval", type=int, default=3600, help="Interval in seconds between wallpaper rotations (default: 3600)")
+    install_parser.add_argument("--generate", action="store_true", help="Generate new images instead of fetching them (only applies with --city)")
+    install_parser.add_argument("--interval", 
+                              action=IntervalAction,
+                              type=int,
+                              default=None,
+                              help="Interval in seconds between wallpaper rotations (default: 3600 for generate, 600 for fetch)")
     install_parser.add_argument("--city", type=str, help="City name for weather-based prompt generation")
 
     # Uninstall command
     subparsers.add_parser("uninstall", help="Uninstall the plist files for automatic wallpaper rotation")
 
-    # Reinstall command
+    # Update reinstall parser
     reinstall_parser = subparsers.add_parser("reinstall", help="Reinstall the plist file for automatic wallpaper rotation")
-    reinstall_parser.add_argument("--interval", type=int, default=3600, help="Interval in seconds between wallpaper rotations (default: 3600)")
+    reinstall_parser.add_argument("--generate", action="store_true", help="Generate new images instead of fetching them (only applies with --city)")
+    reinstall_parser.add_argument("--interval", 
+                                action=IntervalAction,
+                                type=int,
+                                default=None,
+                                help="Interval in seconds between wallpaper rotations (default: 3600 for generate, 600 for fetch)")
     reinstall_parser.add_argument("--city", type=str, help="City name for weather-based prompt generation")
 
     # Rotate command (default behavior)
@@ -241,8 +318,30 @@ def main():
         else:
             print("No new images were generated.")
 
+    elif args.command == "fetch":
+        city_wallpaper_path = os.path.join(directory_path, "city")
+        os.makedirs(city_wallpaper_path, exist_ok=True)
+        latest_wallpaper = fetch_latest_city_wallpaper(args.city, city_wallpaper_path)
+
+        if latest_wallpaper:
+            if args.rotate_now:
+                change_wallpaper(latest_wallpaper)
+                print(f"Wallpaper changed to: {latest_wallpaper}")
+            else:
+                print(f"Most recent wallpaper for {args.city}: {latest_wallpaper}")
+        else:
+            print(f"Failed to fetch wallpaper for {args.city}")
+
+    ## Installation / Uninstallation ##
     elif args.command in ["install", "uninstall", "reinstall"]:
+        # Set default interval based on generate flag for install/reinstall
+        if args.command in ['install', 'reinstall']:
+            if args.interval is None:
+                args.interval = 3600 if args.generate else 600
+        
         handle_service_management(args)
+    ##
+
     else:  # Default behavior (rotate)
         rotate_wallpaper(directory_path)
 
@@ -255,8 +354,12 @@ if __name__ == '__main__':
         import configparser
         config = configparser.ConfigParser()
         config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
-        config.read(config_path)
-        openai_api_key = config['OpenAI']['api_key']
-        os.environ['OPENAI_API_KEY'] = openai_api_key
+        try:
+            config.read(config_path)
+            openai_api_key = config['OpenAI']['api_key']
+            os.environ['OPENAI_API_KEY'] = openai_api_key
+        except (FileNotFoundError, KeyError):
+            print("Error: OpenAI API key not found in environment or config.ini")
+            sys.exit(1)
 
     main()

@@ -3,12 +3,12 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.wallpaper-generator.generate-city</string>
+    <string>com.wallpaper-generator.fetch-city</string>
     <key>ProgramArguments</key>
     <array>
         <string>{{PYTHON_PATH}}</string>
         <string>{{SCRIPT_PATH}}</string>
-        <string>generate</string>
+        <string>fetch</string>
         <string>--city</string>
         <string>{{CITY_NAME}}</string>
         <string>--rotate-now</string>
@@ -23,6 +23,8 @@
     <string>/tmp/wallpaperchanger-{{CITY_NAME}}.log</string>
     <key>StandardErrorPath</key>
     <string>/tmp/wallpaperchanger-{{CITY_NAME}}.err</string>
+    <key>UserName</key>
+    <string>sswanepoel</string>
     <key>LimitLoadToSessionType</key>
     <string>Aqua</string>
     <key>SessionCreate</key>

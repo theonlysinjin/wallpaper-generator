@@ -5,3 +5,4 @@ venv/
 config.ini
 generate-city.plist
 generate-rotate.plist
+fetch-city.plist

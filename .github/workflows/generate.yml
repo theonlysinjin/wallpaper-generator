@@ -46,8 +46,21 @@ jobs:
       matrix:
         include:
           - city: Cape Town
+            timezone: Africa/Johannesburg
 
     steps:
+      - name: Check local time
+        id: timecheck
+        run: |
+          hour=$(TZ=${{ matrix.timezone }} date +%H)
+          time=$(TZ=${{ matrix.timezone }} date +%H:%M)
+          if [ $hour -ge 6 ] && [ $hour -lt 22 ]; then
+            echo "Current time in ${{ matrix.city }} (${{ matrix.timezone }}) is $time - proceeding with generation"
+          else
+            echo "Current time in ${{ matrix.city }} (${{ matrix.timezone }}) is $time - outside of working hours (06:00-22:00)"
+            exit 1
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v3
 

@@ -1,5 +1,5 @@
 #!env python3
-import os, re, requests, sys, glob, random, subprocess, io, argparse, json, getpass
+import os, re, requests, sys, glob, random, subprocess, io, argparse, json
 from PIL import Image, PngImagePlugin
 from datetime import datetime
 from openai import OpenAI
@@ -209,7 +209,6 @@ def install_service(args):
     plist_content = plist_content.replace('{{SCRIPT_PATH}}', script_path)
     if args.city:
         plist_content = plist_content.replace('{{CITY_NAME}}', args.city)
-    plist_content = plist_content.replace('{{USERNAME}}', getpass.getuser())
 
     with open(plist_path, 'w') as file:
         file.write(plist_content)

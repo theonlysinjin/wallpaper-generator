@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.sswanepoel.generate-rotate</string>
+    <string>com.wallpaper-generator.generate-rotate</string>
     <key>ProgramArguments</key>
     <array>
         <string>{{PYTHON_PATH}}</string>

@@ -23,8 +23,6 @@
     <string>/tmp/wallpaperchanger-{{CITY_NAME}}.log</string>
     <key>StandardErrorPath</key>
     <string>/tmp/wallpaperchanger-{{CITY_NAME}}.err</string>
-    <key>UserName</key>
-    <string>sswanepoel</string>
     <key>LimitLoadToSessionType</key>
     <string>Aqua</string>
     <key>SessionCreate</key>

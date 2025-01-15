@@ -92,7 +92,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/AIWallpaper.pkg  # Path to the built app
+          asset_path: AIWallpaper.pkg  # Path to the built app
           asset_name: AIWallpaper.pkg
           asset_content_type: application/octet-stream
 
@@ -103,6 +103,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/app.txt
+          asset_path: app.txt
           asset_name: app.txt
           asset_content_type: application/octet-stream

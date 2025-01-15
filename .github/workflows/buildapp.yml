@@ -49,7 +49,13 @@ jobs:
           pip3 install -r app/requirements.txt
 
       - name: Echo Hello World
-        run: echo "Hello, World!"
+        run: echo "Hello, World!" > app/app.txt
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-artifact
+          path: app/app.txt
 
   release:
     needs: [macos_build, windows_build]
@@ -59,12 +65,12 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Download macOS Artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: macos-artifact
 
       - name: Download Windows Artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: windows-artifact
 
@@ -90,13 +96,13 @@ jobs:
           asset_name: AIWallpaper.pkg
           asset_content_type: application/octet-stream
 
-    #   - name: Upload Windows Release Asset
-    #     id: upload-windows-release-asset
-    #     uses: actions/upload-release-asset@v1
-    #     env:
-    #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #     with:
-    #       upload_url: ${{ steps.create_release.outputs.upload_url }}
-    #       asset_path: path/to/windows/output  # Update this path to the relevant output if needed
-    #       asset_name: windows_output_file_name  # Update this to the actual file name
-    #       asset_content_type: application/octet-stream
+      - name: Upload Windows Release Asset
+        id: upload-windows-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: app/app.txt
+          asset_name: app.txt
+          asset_content_type: application/octet-stream

@@ -26,6 +26,12 @@ jobs:
         run: |
           cd app/ && ./macos.sh
 
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos-artifact
+          path: app/AIWallpaper.pkg  # Path to the built app
+
   windows_build:
     runs-on: windows-latest
     steps:
@@ -52,6 +58,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Download macOS Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: macos-artifact
+
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: windows-artifact
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -63,13 +79,24 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload Release Asset
-        id: upload-release-asset
+      - name: Upload macOS Release Asset
+        id: upload-macos-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/${{ steps.find_app.outputs.app_name }}
-          asset_name: ${{ steps.find_app.outputs.app_name }}
+          asset_path: app/AIWallpaper.pkg  # Path to the built app
+          asset_name: AIWallpaper.pkg
           asset_content_type: application/octet-stream
+
+    #   - name: Upload Windows Release Asset
+    #     id: upload-windows-release-asset
+    #     uses: actions/upload-release-asset@v1
+    #     env:
+    #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #     with:
+    #       upload_url: ${{ steps.create_release.outputs.upload_url }}
+    #       asset_path: path/to/windows/output  # Update this path to the relevant output if needed
+    #       asset_name: windows_output_file_name  # Update this to the actual file name
+    #       asset_content_type: application/octet-stream
